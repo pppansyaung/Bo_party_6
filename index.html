@@ -65,6 +65,7 @@
   .splashTitle{animation:pop .55s cubic-bezier(.2,1.8,.4,1)} @keyframes pop{from{transform:scale(.25) rotate(-8deg);opacity:0}to{transform:scale(1);opacity:1}}
   #rotate{display:none;position:absolute;inset:0;z-index:30;background:var(--ink);color:white;place-items:center;text-align:center;padding:30px}
   @media (orientation:portrait) and (max-width:700px){#rotate{display:grid}}
+  #rotate.dismissed{display:none!important}
   @media(max-width:560px){
     .details{grid-template-columns:1fr}
     #startScreen{padding:10px}
@@ -635,7 +636,7 @@ document.getElementById('rsvpBtn').onclick=showRsvp;
 document.getElementById('rsvpBackBtn').onclick=showInfo;
 
 function downloadICS(){const text=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Bo Aquasplash//Invite//EN\r\nBEGIN:VEVENT\r\nUID:bo-aquasplash-20260912@example\r\nDTSTAMP:20260710T120000Z\r\nDTSTART:20260912T140000Z\r\nDTEND:20260912T160000Z\r\nSUMMARY:Bo's 6 Aquasplash Inflatable Party!\r\nLOCATION:London Aquatics Centre, Stratford E20 2ZQ\r\nDESCRIPTION:Contact Pansy 07880 627734 or Jakub 07928 941905.\r\nEND:VEVENT\r\nEND:VCALENDAR`;const blob=new Blob([text],{type:'text/calendar'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bos-aquasplash-party.ics';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-document.getElementById('playBtn').onclick=start;document.getElementById('skipBtn').onclick=showInfo;document.getElementById('infoBtn').onclick=showInfo;document.getElementById('portraitInfo').onclick=showInfo;document.getElementById('closeInfo').onclick=()=>{infoScreen.classList.add('hidden');if(state==='info'){state='menu';startScreen.classList.remove('hidden')}};document.getElementById('replayBtn').onclick=start;document.getElementById('calendarBtn').onclick=downloadICS;
+document.getElementById('playBtn').onclick=start;document.getElementById('skipBtn').onclick=showInfo;document.getElementById('infoBtn').onclick=showInfo;document.getElementById('portraitInfo').onclick=()=>{document.getElementById('rotate').classList.add('dismissed');showInfo()};document.getElementById('closeInfo').onclick=()=>{infoScreen.classList.add('hidden');if(state==='info'){state='menu';startScreen.classList.remove('hidden')}};document.getElementById('replayBtn').onclick=start;document.getElementById('calendarBtn').onclick=downloadICS;
 const muteBtn=document.getElementById('muteBtn');
 muteBtn.onclick=()=>{ensureAudio();muted=!muted;muteBtn.textContent=muted?'🔇':'🔊'};
 })();

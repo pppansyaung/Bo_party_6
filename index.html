@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#857ee7" />
+<title>Bo's 6 Aquasplash Inflatable Party!</title>
+<style>
+  :root{
+    --sky:#45b8ff;--sky2:#1f8fe5;--ink:#10213d;--cream:#fffdf2;
+    --pink:#f34f8f;--yellow:#ffd42f;--blue:#157fda;--deep:#084f9f;
+    --green:#40d274;--red:#f45145;--coral:#ff654b;--panel:#eef8ff;
+    --white:#ffffff;--water:#20b7ef;--waterDeep:#126db4;
+  }
+  *{box-sizing:border-box} html,body{margin:0;height:100vh;height:100dvh;overflow:hidden;background:#48aaf2;font-family:"Arial Black","Courier New",monospace;color:var(--ink)}
+  button,a{font:inherit}.pixel{image-rendering:pixelated}
+  #app{height:100%;display:grid;place-items:center;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  #shell{position:relative;width:min(100vw,1024px);height:min(100vh,640px);height:min(100dvh,640px);overflow:hidden;background:var(--sky);box-shadow:0 0 0 4px #25233d;}
+  canvas{display:block;width:100%;height:100%;image-rendering:pixelated;touch-action:none}
+  .topbar{position:absolute;z-index:5;left:12px;right:12px;top:12px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+  .badge,.infoBtn{pointer-events:auto;border:4px solid var(--ink);box-shadow:5px 5px 0 var(--ink);background:var(--cream);padding:8px 10px;font-weight:900;text-transform:uppercase;font-size:clamp(11px,2.5vw,15px)}
+  .infoBtn{background:var(--yellow);cursor:pointer}
+  .screen{position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:18px;background:rgba(7,45,92,.14)}
+  .hidden{display:none!important}
+  .card{--card-pad-x:clamp(16px,3vw,26px);width:min(94%,760px);max-height:93%;overflow:auto;background:linear-gradient(180deg,#2ea9f2 0%,#1c82cf 100%);border:4px solid #10213d;box-shadow:8px 8px 0 #10213d;padding:clamp(16px,3vw,26px);text-align:center}
+  #infoScreen .card{background:linear-gradient(#f8fbff,#dcecff)}
+  h1{font-size:clamp(31px,7.2vw,62px);line-height:.88;margin:0 0 14px;text-transform:uppercase;letter-spacing:-3px}
+  h1 .titleTop,h1 .titleBottom{display:block}
+  h1 .titleTop{color:#ffd43b;text-shadow:3px 0 #10213d,-3px 0 #10213d,0 3px #10213d,0 -3px #10213d,5px 5px 0 #e58a18}
+  h1 .aqua{color:#45d5ef;text-shadow:3px 0 #10213d,-3px 0 #10213d,0 3px #10213d,0 -3px #10213d,5px 5px 0 #116aaa}
+  h1 .splash{color:#ff654b;text-shadow:3px 0 #10213d,-3px 0 #10213d,0 3px #10213d,0 -3px #10213d,5px 5px 0 #b52f38}
+  h1 .bang{color:#ffd43b;text-shadow:3px 0 #10213d,-3px 0 #10213d,0 3px #10213d,0 -3px #10213d,5px 5px 0 #e58a18}
+  h2{font-size:clamp(22px,5vw,38px);margin:0 0 14px;text-transform:uppercase}
+  p{font-family:Arial,sans-serif;font-weight:700;line-height:1.35}
+  .sub{margin:8px auto 16px;max-width:620px;color:#fff;font-size:clamp(14px,2.25vw,18px);text-shadow:0 2px 0 rgba(16,33,61,.75)}
+  .cta{border:4px solid #10213d;box-shadow:6px 6px 0 #10213d;background:var(--pink);color:white;padding:12px 18px;font-weight:900;text-transform:uppercase;cursor:pointer;margin:5px;min-height:48px;touch-action:manipulation}
+  .cta.alt{background:var(--yellow);color:#10213d}.cta.blue{background:var(--blue);color:#10213d}
+  .cta:active,.infoBtn:active,.control:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #10213d}
+  .characters{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+  .char{border:4px solid #10213d;background:linear-gradient(#ffffff,#eaf6ff);padding:9px 4px;cursor:pointer;min-width:0;box-shadow:0 3px 0 rgba(16,33,61,.28)}
+  .char.selected{background:#fff1a6;outline:4px solid #ef4f89;outline-offset:-4px;transform:translateY(-3px);box-shadow:0 6px 0 #10213d}
+  .charCanvas{width:64px;height:74px;max-width:100%;image-rendering:pixelated}.char strong{display:block;font-size:12px;margin-top:4px;text-transform:uppercase;color:#10213d}
+  #startScreen .tiny{color:#eaf7ff;text-shadow:0 1px 0 rgba(16,33,61,.7)}
+  #startScreen #playBtn{background:#ef4f89}
+  #startScreen #skipBtn{background:#ffd43b}
+  .bunting{display:flex;justify-content:flex-start;align-items:flex-start;gap:1px;margin:-6px calc(-1 * var(--card-pad-x,20px)) 10px;width:calc(100% + 2*var(--card-pad-x,20px));flex-wrap:nowrap;overflow:hidden}
+  .bunting .flag{width:0;height:0;flex:0 0 auto;border-left:11px solid transparent;border-right:11px solid transparent;border-top:20px solid #ffd42f;filter:drop-shadow(0 2px 0 #10213d)}
+
+  #controls{position:absolute;z-index:7;left:14px;right:14px;bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;pointer-events:none}
+  .controlGroup{display:flex;gap:10px}.control{pointer-events:auto;width:68px;height:58px;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);font-size:24px;font-weight:900;background:rgba(255,248,221,.92);touch-action:none;user-select:none}.jump{width:92px;background:var(--yellow);font-size:14px}.boost{background:var(--pink);color:#fff;font-size:13px}
+  .details{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;margin:16px 0}.detail{border:3px solid var(--ink);padding:12px;background:white}.detail b{display:block;text-transform:uppercase;font-size:12px;margin-bottom:4px}.detail span,.detail a{font-family:Arial,sans-serif;font-weight:800;color:var(--ink)}
+  #rsvpForm,#rsvpSummary{text-align:left;font-family:Arial,sans-serif}
+  .rsvpFieldLabel{font-weight:900;text-transform:uppercase;font-size:12px;color:#10213d;margin:14px 0 6px}
+  .rsvpField{display:block;font-weight:800;font-size:13px;color:#10213d;margin:10px 0}
+  .rsvpField input[type="text"],.rsvpField select{display:block;width:100%;margin-top:5px;padding:9px 10px;border:3px solid #10213d;font-family:Arial,sans-serif;font-weight:700;font-size:14px;background:#fff}
+  .childRow{display:flex;gap:8px;align-items:center;background:#fff;border:3px solid #10213d;padding:8px;margin-bottom:8px}
+  .childRow input[type="text"]{flex:1;border:2px solid #10213d;padding:7px 8px;font-family:Arial,sans-serif;font-weight:700;font-size:14px}
+  .childRow label{display:flex;align-items:center;gap:4px;font-family:Arial,sans-serif;font-weight:800;font-size:12px;white-space:nowrap}
+  .childRow .removeChild{background:#f45145;color:#fff;border:2px solid #10213d;font-weight:900;padding:6px 9px;cursor:pointer}
+  .policyNote{background:#fff3c4;border:3px solid #10213d;padding:10px;margin:12px 0}
+  .policyNote p{margin:0 0 8px;font-size:13px}
+  .rsvpError{color:#f45145;font-weight:900;font-family:Arial,sans-serif}
+  .cta.small{min-height:auto;padding:8px 12px;font-size:12px}
+  .actions{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}.tiny{font-size:12px;font-family:Arial,sans-serif;margin-top:14px}
+  .splashTitle{animation:pop .55s cubic-bezier(.2,1.8,.4,1)} @keyframes pop{from{transform:scale(.25) rotate(-8deg);opacity:0}to{transform:scale(1);opacity:1}}
+  #rotate{display:none;position:absolute;inset:0;z-index:30;background:var(--ink);color:white;place-items:center;text-align:center;padding:30px}
+  @media (orientation:portrait) and (max-width:700px){#rotate{display:grid}}
+  #rotate.dismissed{display:none!important}
+  @media(max-width:560px){
+    .details{grid-template-columns:1fr}
+    #startScreen{padding:10px}
+    #startScreen .card{width:98%;padding:14px 10px;--card-pad-x:10px}
+    h1{font-size:clamp(28px,9vw,43px);margin-bottom:9px}
+    .sub{font-size:13px;margin-bottom:10px}
+    .characters{gap:5px;margin:10px 0}
+    .char{padding:6px 2px}
+    .charCanvas{width:48px;height:56px}
+    .char strong{font-size:10px}
+    #startScreen .cta{padding:9px 10px;min-height:42px;font-size:12px}
+    #startScreen .tiny{font-size:10px;margin-top:8px}
+    .control{width:55px;height:52px}.jump{width:78px}.badge{max-width:58%;line-height:1.1}
+  }
+  @media(max-height:600px) and (orientation:landscape){
+    #startScreen{padding:10px}
+    #startScreen .card{padding:12px 18px;max-height:96%;--card-pad-x:18px}
+    h1{font-size:clamp(30px,7vw,50px);margin-bottom:8px}
+    .sub{font-size:14px;margin:5px auto 9px}
+    .characters{margin:8px 0}
+    .charCanvas{width:48px;height:56px}
+    #startScreen .cta{min-height:40px;padding:8px 14px}
+    #startScreen .tiny{margin-top:7px;font-size:10px}
+  }
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="app"><div id="shell">
+  <canvas id="game" width="960" height="540" aria-label="Aquasplash obstacle course game"></canvas>
+  <div class="topbar"><div class="badge">Bo's 6 Aquasplash</div><div style="display:flex;gap:8px;pointer-events:auto"><button class="infoBtn" id="muteBtn" style="background:#ffffff">🔊</button><button class="infoBtn" id="infoBtn">Party info</button></div></div>
+
+  <div id="startScreen" class="screen">
+    <div class="card">
+      <div class="bunting" aria-hidden="true"></div>
+      <h1 aria-label="Bo's 6 Aquasplash!">
+        <span class="titleTop">Bo's 6</span>
+        <span class="titleBottom"><span class="aqua">Aqua</span><span class="splash">splash</span><span class="bang">!</span></span>
+      </h1>
+      <p class="sub">Pick a swimmer, bounce across the inflatable pool course and take the giant finale slide to reveal the party invite.</p>
+      <div class="characters" id="characters"></div>
+      <button class="cta" id="playBtn">Start game</button>
+      <button class="cta alt" id="skipBtn">Go straight to party info</button>
+      <p class="tiny">Mobile tip: turn your phone sideways, then just tap anywhere on the screen to jump. No one can lose, because birthday admin is hard enough.</p>
+    </div>
+  </div>
+
+
+  <div id="infoScreen" class="screen hidden" role="dialog" aria-modal="true">
+    <div class="card">
+      <h2 class="splashTitle">You made a splash!</h2>
+      <p>Come celebrate <strong>Bo turning 6</strong> at her Aquasplash Inflatable Party.</p>
+      <div class="details">
+        <div class="detail"><b>When</b><span>Saturday 12 September 2026<br>3–5pm</span></div>
+        <div class="detail"><b>Where</b><span>London Aquatics Centre<br>Stratford E20 2ZQ</span></div>
+        <div class="detail"><b>Contact</b><span>Pansy <a href="tel:+447880627734">07880 627734</a><br>Jakub <a href="tel:+447928941905">07928 941905</a></span></div>
+        <div class="detail"><b>Theme</b><span>Inflatables, obstacles and one very big splash.</span></div>
+      </div>
+      <div class="actions">
+        <button class="cta blue" id="calendarBtn">Add to calendar</button>
+        <a class="cta alt" href="https://www.google.com/maps/search/?api=1&query=London+Aquatics+Centre+Stratford+E20+2ZQ" target="_blank" rel="noopener">Open map</a>
+        <button class="cta" id="rsvpBtn">RSVP now</button>
+        <button class="cta" id="replayBtn">Play again</button>
+        <button class="cta alt" id="closeInfo">Close</button>
+      </div>
+      <p class="tiny">Please message Pansy or Jakub to RSVP.</p>
+    </div>
+  </div>
+
+  <div id="rsvpScreen" class="screen hidden" role="dialog" aria-modal="true">
+    <div class="card">
+      <h2>RSVP for Bo's party!</h2>
+      <p>Tell us who's coming so we can plan the pool session safely.</p>
+      <div id="rsvpForm">
+        <label class="rsvpField">Parent / guardian name
+          <input type="text" id="rsvpParentName" placeholder="Your name" autocomplete="name">
+        </label>
+        <div class="rsvpFieldLabel">Children attending</div>
+        <div id="childRows"></div>
+        <button type="button" class="cta alt small" id="addChildBtn">+ Add another child</button>
+        <div id="under8Notice" class="policyNote hidden">
+          <p><strong>Under 8s swimming policy:</strong> children under 8 must be accompanied in the water by a responsible adult (18 or over), with at least one adult for every two children, for the whole party.</p>
+          <label class="rsvpField">Will a responsible adult accompany them in the water for the whole party?
+            <select id="accompanyAnswer">
+              <option value="">Select…</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+              <option value="Not sure yet">Not sure yet</option>
+            </select>
+          </label>
+        </div>
+        <p id="rsvpError" class="rsvpError hidden"></p>
+        <div class="actions">
+          <button class="cta" id="rsvpReviewBtn">Review RSVP</button>
+          <button class="cta alt" id="rsvpBackBtn">Back</button>
+        </div>
+      </div>
+      <div id="rsvpSummary" class="hidden">
+        <div class="detail" style="text-align:left"><b>Your RSVP</b><span id="rsvpSummaryText" style="white-space:pre-wrap"></span></div>
+        <div class="actions">
+          <a class="cta blue" id="rsvpWhatsappPansy" target="_blank" rel="noopener">Send to Pansy (WhatsApp)</a>
+          <a class="cta blue" id="rsvpWhatsappJakub" target="_blank" rel="noopener">Send to Jakub (WhatsApp)</a>
+          <button class="cta alt" id="rsvpCopyBtn">Copy RSVP text</button>
+          <button class="cta alt" id="rsvpEditBtn">Edit</button>
+        </div>
+        <p class="tiny">No WhatsApp? Copy the text above and send it however's easiest.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls" class="hidden" aria-label="Game controls">
+    <div class="controlGroup"><button class="control" data-key="left">◀</button><button class="control" data-key="right">▶</button></div>
+    <div class="controlGroup"><button class="control boost" data-key="boost">BOOST</button><button class="control jump" data-key="jump">JUMP</button></div>
+  </div>
+  <div id="rotate"><div><h2>Turn your phone sideways</h2><p>The pool is much wider that way.</p><button class="cta alt" id="portraitInfo">Party info instead</button></div></div>
+</div></div>
+<script>
+(()=>{
+'use strict';
+const canvas=document.getElementById('game'),screenCtx=canvas.getContext('2d');screenCtx.imageSmoothingEnabled=false;
+const PIXEL_SCALE=1.5;
+const buf=document.createElement('canvas');
+let ctx=buf.getContext('2d');ctx.imageSmoothingEnabled=false;
+const startScreen=document.getElementById('startScreen'),infoScreen=document.getElementById('infoScreen'),controls=document.getElementById('controls');
+const rsvpScreen=document.getElementById('rsvpScreen'),rsvpForm=document.getElementById('rsvpForm'),rsvpSummary=document.getElementById('rsvpSummary');
+const W=960,H=540,ground=410;
+buf.width=Math.round(W/PIXEL_SCALE);buf.height=Math.round(H/PIXEL_SCALE);
+const palette=[
+ {name:'Bo',skin:'#d5a17f',hair:'#4a2d35',suit:'#f34f8f',cap:'#ffd42f'},
+ {name:'Wave',skin:'#9b6549',hair:'#241a1d',suit:'#20b7ef',cap:'#157fda'},
+ {name:'Bubbles',skin:'#f2c7a4',hair:'#d77837',suit:'#f34f8f',cap:'#8e51d2'},
+ {name:'Rocket',skin:'#d6a47c',hair:'#3f2b20',suit:'#40d274',cap:'#63b93f'}
+];
+let selected=0,state='menu',keys={},last=0,camera=0,confetti=[],splashTimer=0,finaleT=0;
+let score=0,coinCount=0,lives=3;
+let audioCtx=null,muted=false,musicNextTime=0,musicStep=0;
+const musicPattern=[392,494,587,494,392,587,659,587];
+function ensureAudio(){
+  if(!audioCtx){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){audioCtx=null}}
+  if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
+}
+function beep(freq,dur,type='square',vol=.16,delay=0){
+  if(!audioCtx||muted)return;
+  const t0=audioCtx.currentTime+delay;
+  const osc=audioCtx.createOscillator(),g=audioCtx.createGain();
+  osc.type=type;osc.frequency.setValueAtTime(freq,t0);
+  g.gain.setValueAtTime(vol,t0);g.gain.exponentialRampToValueAtTime(.001,t0+dur);
+  osc.connect(g);g.connect(audioCtx.destination);
+  osc.start(t0);osc.stop(t0+dur+.02);
+}
+function sfxJump(){beep(520,.09,'square',.14);beep(760,.08,'square',.1,.05)}
+function sfxCoin(){beep(880,.06,'square',.14);beep(1320,.09,'square',.12,.05)}
+function sfxSplash(){for(let i=0;i<6;i++)beep(240-i*20,.14,'triangle',.12,i*.03)}
+function sfxClimb(){beep(300,.05,'square',.07)}
+function sfxSlide(){beep(660,.05,'triangle',.1);beep(880,.05,'triangle',.1,.06);beep(1100,.08,'triangle',.1,.12)}
+function updateMusic(){
+  if(!audioCtx||muted)return;
+  if(!['playing','climb','slide'].includes(state))return;
+  if(audioCtx.currentTime>=musicNextTime){
+    beep(musicPattern[musicStep%musicPattern.length],.14,'square',.06);
+    musicStep++;musicNextTime=audioCtx.currentTime+.19;
+  }
+}
+const player={x:80,y:ground-58,vx:0,vy:0,w:34,h:54,onGround:false,boost:0,stun:0};
+let coins=[];for(let x=300;x<2000;x+=210)coins.push({x,y:245+Math.sin(x)*10,got:false});
+const finale={
+  ladderStartX:2058,
+  ladderStartY:ground-58,
+  ladderEndX:2135,
+  ladderEndY:ground-240+22,
+  slideTopX:2192,
+  slideTopY:ground-240+42,
+  slideBottomX:2290,
+  slideBottomY:ground-48
+};
+const obstacles=[
+ {x:360,type:'bumper',w:92,h:46},{x:610,type:'tunnel',w:125,h:82},{x:895,type:'roller',w:120,h:36},
+ {x:1160,type:'bumper',w:96,h:52},{x:1420,type:'arches',w:150,h:94},{x:1730,type:'roller',w:120,h:38}
+];
+const slide={x:2050,w:240,h:240};
+function pxRect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function roundedRect(x,y,w,h,r,fill,stroke='#10213d',lw=4){
+  x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);
+  ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=fill;ctx.fill();
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}
+}
+function shine(x,y,w,h,alpha=.35){ctx.fillStyle=`rgba(255,255,255,${alpha})`;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function ellipse(cx,cy,rx,ry,fill,stroke=null,lw=2){
+  ctx.beginPath();ctx.ellipse(Math.round(cx),Math.round(cy),Math.max(.1,rx),Math.max(.1,ry),0,0,Math.PI*2);
+  ctx.fillStyle=fill;ctx.fill();
+  if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}
+}
+function drawStar(cx,cy,r,fill='#ffd42f',stroke='#10213d',lw=2.5){
+ const spikes=5,step=Math.PI/spikes;let rot=Math.PI/2*3;
+ ctx.beginPath();ctx.moveTo(cx,cy-r);
+ for(let i=0;i<spikes;i++){
+   ctx.lineTo(cx+Math.cos(rot)*r,cy+Math.sin(rot)*r);rot+=step;
+   ctx.lineTo(cx+Math.cos(rot)*(r*.42),cy+Math.sin(rot)*(r*.42));rot+=step;
+ }
+ ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+ if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw;ctx.stroke()}
+ ctx.fillStyle='rgba(255,255,255,.55)';ctx.beginPath();ctx.arc(cx-r*.22,cy-r*.28,r*.22,0,Math.PI*2);ctx.fill();
+}
+function cloud(x,y,s=1){
+  roundedRect(x,y,58*s,18*s,7*s,'#ffffff',null,0);
+  roundedRect(x+8*s,y-12*s,22*s,20*s,8*s,'#ffffff',null,0);
+  roundedRect(x+28*s,y-18*s,22*s,26*s,9*s,'#ffffff',null,0);
+  roundedRect(x+44*s,y-8*s,20*s,16*s,7*s,'#ffffff',null,0);
+  pxRect(x+8*s,y+18*s,48*s,4*s,'#d8f2ff');
+}
+let gameClock=0;
+function balloon(x,y,col){
+  const bob=Math.sin(gameClock*1.6+x*.01)*6;
+  ctx.strokeStyle='rgba(16,33,61,.4)';ctx.lineWidth=1.4;
+  ctx.beginPath();ctx.moveTo(x,y+18+bob);ctx.lineTo(x-3,y+46+bob);ctx.stroke();
+  ellipse(x,y+bob,13,16,col,'#10213d',2);
+  shine(x-5,y-6+bob,5,7,.4);
+  pxRect(x-2,y+15+bob,4,4,col);
+}
+function drawBackground(){
+ const sky=ctx.createLinearGradient(0,0,0,330);sky.addColorStop(0,'#45b8ff');sky.addColorStop(1,'#7ed6ff');
+ ctx.fillStyle=sky;ctx.fillRect(0,0,W,330);
+ cloud(120-camera*.02,48,.55);cloud(620-camera*.03,36,.5);cloud(880-camera*.025,58,.45);
+ cloud(80-camera*.05,82,.8);cloud(430-camera*.08,64,1);cloud(760-camera*.04,112,.7);
+ // simplified London Aquatics Centre silhouette
+ ctx.fillStyle='#d8e9f3';ctx.beginPath();ctx.moveTo(-50,304);ctx.quadraticCurveTo(150,135,360,286);ctx.quadraticCurveTo(610,90,1010,304);ctx.lineTo(1010,330);ctx.lineTo(-50,330);ctx.closePath();ctx.fill();
+ ctx.strokeStyle='#ffffff';ctx.lineWidth=8;for(let x=-140;x<1120;x+=170){ctx.beginPath();ctx.moveTo(x-camera*.10,324);ctx.lineTo(x+230-camera*.10,120);ctx.stroke()}
+ // crowd strip
+ pxRect(0,300,W,30,'#54a56a');
+ for(let x=0;x<W;x+=18){pxRect(x,310+(x%3)*3,8,12,['#ffd42f','#f34f8f','#ffffff','#157fda'][Math.floor(x/18)%4])}
+ // floating party balloons drifting past in the world
+ const balloonSpots=[[520,'#f34f8f'],[980,'#ffd42f'],[1480,'#20b7ef'],[1980,'#40d274'],[2260,'#f34f8f']];
+ balloonSpots.forEach(([bx,c])=>{const sx=bx-camera*.7;if(sx>-30&&sx<W+30)balloon(sx,150,c)});
+ // water
+ const water=ctx.createLinearGradient(0,330,0,H);water.addColorStop(0,'#20b7ef');water.addColorStop(1,'#126db4');
+ ctx.fillStyle=water;ctx.fillRect(0,330,W,H-330);
+ for(let y=346;y<540;y+=28){for(let x=((y/28)%2)*20-(camera*.35%40);x<W;x+=40)roundedRect(x,y,24,4,2,'#bfefff',null,0)}
+ // animated water sparkle twinkles
+ for(let i=0;i<26;i++){
+   const sx=(i*137)%W,sy=340+((i*71)%160);
+   const tw=Math.sin(gameClock*3+i*1.7)*.5+.5;
+   if(tw>.6)pxRect(sx,sy,3,3,`rgba(255,255,255,${(tw-.6)*1.8})`);
+ }
+ pxRect(0,ground,W,H-ground,'#126db4');pxRect(0,ground,W,9,'#ffffff');
+}
+function stipple(x,y,w,h,seed,col='rgba(16,33,61,.10)',count=10){
+ for(let i=0;i<count;i++){
+   const rx=x+((seed*13+i*47)%Math.max(1,w-4))+2;
+   const ry=y+((seed*7+i*31)%Math.max(1,h-4))+2;
+   pxRect(rx,ry,2,2,col);
+ }
+}
+function drawInflatable(o){
+ const x=o.x-camera,y=ground-o.h;
+ if(o.type==='bumper'){
+  roundedRect(x,y+8,o.w,o.h-8,18,'#f45145');
+  stipple(x+6,y+12,o.w-12,o.h-16,o.x,'rgba(16,33,61,.12)',9);
+  roundedRect(x+12,y,o.w-24,22,10,'#ff7b70');
+  roundedRect(x+8,y+12,18,o.h-20,9,'#157fda');
+  roundedRect(x+o.w-26,y+12,18,o.h-20,9,'#157fda');
+  shine(x+18,y+8,o.w-36,5,.5);
+ }
+ if(o.type==='tunnel'){
+  roundedRect(x,y+28,o.w,o.h-28,18,'#f45145');
+  stipple(x+8,y+32,o.w-16,o.h-36,o.x+1,'rgba(16,33,61,.1)',10);
+  roundedRect(x+12,y,o.w-24,32,16,'#157fda');
+  roundedRect(x+34,y+25,o.w-68,o.h-25,18,'#45b8ff');
+  roundedRect(x+8,y+o.h-16,o.w-16,16,8,'#ff7b70');
+  shine(x+24,y+6,o.w-48,5,.45);
+ }
+ if(o.type==='roller'){
+  for(let i=0;i<4;i++){
+    const col=i%2?'#f45145':'#157fda';
+    roundedRect(x+2+i*29,y+5,27,o.h-5,13,col);
+    shine(x+8+i*29,y+9,12,4,.45);
+  }
+ }
+ if(o.type==='arches'){
+  roundedRect(x,y+46,o.w,o.h-46,18,'#f45145');
+  for(let i=0;i<3;i++){
+    roundedRect(x+6+i*48,y+10,38,68,17,'#157fda');
+    roundedRect(x+14+i*48,y,22,24,11,'#45b8ff');
+  }
+  roundedRect(x+28,y+52,94,42,18,'#45b8ff');
+  shine(x+18,y+8,o.w-36,5,.4);
+ }
+}
+function drawSlide(){
+ const x=slide.x-camera,y=ground-slide.h;
+ roundedRect(x+34,y,158,34,15,'#157fda');
+ roundedRect(x+20,y+26,204,46,18,'#f45145');
+ shine(x+45,y+7,105,6,.45);
+ // chunky ladder tower
+ roundedRect(x+2,y+56,68,184,22,'#157fda');
+ pxRect(x+15,y+66,8,166,'#ffd42f');pxRect(x+50,y+66,8,166,'#ffd42f');
+ for(let i=0;i<7;i++)roundedRect(x+17,y+72+i*24,39,7,3,'#ffd42f','#10213d',2);
+ // sign
+ roundedRect(x-28,y+160,78,48,8,'#7a4e25');
+ roundedRect(x-22,y+166,66,36,5,'#fff3c4');
+ ctx.fillStyle='#10213d';ctx.font="14px 'Arial Black', Arial, sans-serif";ctx.textAlign='center';ctx.fillText('CLIMB',x+11,y+181);ctx.fillText('UP!',x+11,y+197);
+ // slide sides and water lane
+ ctx.fillStyle='#f45145';ctx.strokeStyle='#10213d';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x+120,y+60);ctx.lineTo(x+224,y+60);ctx.lineTo(x+258,y+240);ctx.lineTo(x+164,y+240);ctx.closePath();ctx.fill();ctx.stroke();
+ ctx.fillStyle='#20b7ef';ctx.strokeStyle='#10213d';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x+146,y+74);ctx.lineTo(x+198,y+74);ctx.lineTo(x+229,y+226);ctx.lineTo(x+184,y+226);ctx.closePath();ctx.fill();ctx.stroke();
+ ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x+159,y+80);ctx.lineTo(x+195,y+215);ctx.stroke();
+ roundedRect(x+224,y+224,62,18,8,'#ffffff');
+}
+function drawCharacter(x,y,p,scale=1,pose=0){
+ const s=scale;ctx.save();ctx.translate(Math.round(x),Math.round(y));
+ // subtle dark pixel shadow
+ pxRect(5*s,53*s,28*s,5*s,'rgba(16,33,61,.25)');
+ // legs by pose
+ if(pose===1){
+   pxRect(3*s,45*s,11*s,10*s,p.skin);pxRect(22*s,42*s,11*s,10*s,p.skin);
+   pxRect(0*s,50*s,16*s,7*s,p.suit);pxRect(21*s,47*s,16*s,7*s,p.suit);
+ }else if(pose===2){
+   pxRect(4*s,43*s,9*s,12*s,p.skin);pxRect(23*s,47*s,9*s,10*s,p.skin);
+   pxRect(1*s,49*s,14*s,7*s,p.suit);pxRect(21*s,52*s,14*s,6*s,p.suit);
+ }else if(pose===3){
+   pxRect(5*s,44*s,10*s,9*s,p.skin);pxRect(21*s,44*s,10*s,9*s,p.skin);
+   pxRect(2*s,49*s,15*s,6*s,p.suit);pxRect(19*s,49*s,15*s,6*s,p.suit);
+ }else{
+   pxRect(6*s,42*s,9*s,13*s,p.skin);pxRect(22*s,42*s,9*s,13*s,p.skin);
+   pxRect(3*s,51*s,14*s,6*s,p.suit);pxRect(20*s,51*s,14*s,6*s,p.suit);
+ }
+ // body with swimsuit detail
+ roundedRect(4*s,22*s,28*s,25*s,5*s,p.suit,'#10213d',2*s);
+ pxRect(9*s,25*s,18*s,4*s,'rgba(255,255,255,.7)');
+ // arms
+ if(pose===2){
+   pxRect(-1*s,18*s,7*s,22*s,p.skin);pxRect(30*s,27*s,7*s,21*s,p.skin);
+ }else if(pose===1){
+   pxRect(-4*s,17*s,7*s,22*s,p.skin);pxRect(34*s,16*s,7*s,22*s,p.skin);
+ }else if(pose===3){
+   pxRect(-3*s,14*s,7*s,20*s,p.skin);pxRect(32*s,14*s,7*s,20*s,p.skin);
+ }else{
+   pxRect(0,27*s,7*s,19*s,p.skin);pxRect(30*s,27*s,7*s,19*s,p.skin);
+ }
+ // head and hair
+ roundedRect(7*s,3*s,23*s,24*s,6*s,p.skin,'#10213d',2*s);
+ pxRect(6*s,4*s,25*s,8*s,p.hair);pxRect(5*s,9*s,7*s,16*s,p.hair);pxRect(26*s,8*s,6*s,17*s,p.hair);
+ // face
+ pxRect(12*s,13*s,3*s,3*s,'#10213d');pxRect(22*s,13*s,3*s,3*s,'#10213d');
+ pxRect(16*s,20*s,7*s,2*s,'#8f4d55');
+ // cap/headband and highlight
+ roundedRect(7*s,1*s,23*s,6*s,3*s,p.cap,'#10213d',2*s);
+ pxRect(10*s,2*s,12*s,2*s,'rgba(255,255,255,.45)');
+ ctx.restore();
+}
+function drawHeart(cx,cy,col){
+ ctx.fillStyle=col;
+ pxRect(cx-6,cy-4,5,5,col);pxRect(cx+1,cy-4,5,5,col);
+ pxRect(cx-8,cy-1,17,4,col);pxRect(cx-6,cy+3,13,4,col);pxRect(cx-3,cy+7,7,3,col);
+}
+function drawHUD(){
+ const p=palette[selected];
+ // avatar chip
+ roundedRect(14,14,46,52,10,'#eef8ff','#10213d',3);
+ ctx.save();ctx.translate(20,16);ctx.scale(.6,.6);drawCharacter(6,-2,p,1,0);ctx.restore();
+ ctx.fillStyle='#10213d';ctx.font="15px 'Arial Black', Arial, sans-serif";ctx.textBaseline='middle';ctx.textAlign='left';
+ ctx.fillText('x'+lives,70,32);
+ for(let i=0;i<lives;i++)drawHeart(100+i*22,32,'#f34f8f');
+ // star counter
+ drawStar(26,72,11,'#ffd42f','#10213d',2);
+ ctx.textAlign='left';ctx.fillStyle='#10213d';ctx.font="15px 'Arial Black', Arial, sans-serif";
+ ctx.fillText('x'+String(coinCount).padStart(2,'0'),44,72);
+ // score, top right
+ ctx.textAlign='right';ctx.font="14px 'Arial Black', Arial, sans-serif";
+ ctx.fillText('SCORE',W-16,26);
+ ctx.font="24px 'Arial Black', Arial, sans-serif";
+ ctx.fillText(String(score).padStart(6,'0'),W-16,52);
+ ctx.textAlign='left';ctx.textBaseline='alphabetic';
+}
+function drawWorld(){
+ drawBackground();
+ // floating collectible stars, spinning like an animated coin
+ coins.forEach((c,idx)=>{
+   if(c.got)return;
+   const sx=c.x-camera;
+   if(sx>-30&&sx<W+30){
+     const spin=Math.cos(gameClock*3.2+idx*.9);
+     const bob=Math.sin(gameClock*2.4+idx*1.3)*3;
+     ctx.save();ctx.translate(sx+12,c.y+12+bob);ctx.scale(Math.max(.15,Math.abs(spin)),1);
+     drawStar(0,0,13,spin>0?'#ffd42f':'#fff2a8','#10213d',2.5);
+     ctx.restore();
+   }
+ });
+ obstacles.forEach(drawInflatable);drawSlide();
+ // finish pennant, original not Mario copy
+ const fx=slide.x+278-camera;pxRect(fx,130,8,280,'#fffdf3');pxRect(fx+8,142,72,44,'#ffd94a');pxRect(fx+20,151,10,10,'#38bdf8');pxRect(fx+39,151,10,10,'#ff5fa2');pxRect(fx+58,151,10,10,'#2fd16d');
+ if(['playing','climb','slide'].includes(state)){
+   const pose=state==='climb'?2:(state==='slide'?1:(!player.onGround?3:Math.floor(performance.now()/120)%2));
+   drawCharacter(player.x-camera,player.y,palette[selected],1,pose);
+ }
+ // gentle ambient confetti drifting near the party flags while playing
+ if(state==='playing'){
+   for(let i=0;i<5;i++){
+     const bx=(slide.x-1600)+i*380,sx=bx-camera*.9;
+     if(sx>-20&&sx<W+20){
+       const fy=200+((gameClock*30+i*60)%180);
+       roundedRect(sx,fy,6,6,2,['#ffd42f','#f34f8f','#20b7ef','#40d274'][i%4],null,0);
+     }
+   }
+ }
+ // splash particles
+ confetti.forEach(c=>{roundedRect(c.x-camera,c.y,c.s,c.s,2,c.c,null,0)});
+ if(state==='celebrate'){
+   for(let i=0;i<7;i++){
+     const sx=player.x-camera-55+i*18, sy=ground-8-Math.sin((splashTimer*8)+i)*12;
+     roundedRect(sx,sy,22,8,4,'#ffffff',null,0);
+   }
+ }
+ if(state==='climb'){
+   ctx.fillStyle='#ef4f89';ctx.strokeStyle='#172139';ctx.lineWidth=5;ctx.lineJoin='round';ctx.lineCap='round';ctx.miterLimit=2;
+   ctx.font="28px 'Arial Black', Arial, sans-serif";ctx.textAlign='center';
+   ctx.strokeText('CLIMB UP!',W/2,88);ctx.fillText('CLIMB UP!',W/2,88);
+ }
+ if(state==='slide'){
+   ctx.fillStyle='#ffffff';ctx.strokeStyle='#ef4f89';ctx.lineWidth=6;ctx.lineJoin='round';ctx.lineCap='round';ctx.miterLimit=2;
+   ctx.font="34px 'Arial Black', Arial, sans-serif";ctx.textAlign='center';
+   ctx.strokeText('WHEEEE!',W/2,105);ctx.fillText('WHEEEE!',W/2,105);
+ }
+ if(['playing','climb','slide','celebrate'].includes(state))drawHUD();
+}
+function reset(){camera=0;Object.assign(player,{x:80,y:ground-58,vx:0,vy:0,onGround:false,boost:0,stun:0});confetti=[];splashTimer=0;finaleT=0;score=0;coinCount=0;lives=3;coins.forEach(c=>c.got=false)}
+function start(){ensureAudio();reset();state='playing';startScreen.classList.add('hidden');infoScreen.classList.add('hidden');controls.classList.remove('hidden')}
+function showInfo(){state='info';infoScreen.classList.remove('hidden');rsvpScreen.classList.add('hidden');controls.classList.add('hidden')}
+function showRsvp(){state='rsvp';infoScreen.classList.add('hidden');rsvpScreen.classList.remove('hidden');controls.classList.add('hidden');rsvpForm.classList.remove('hidden');rsvpSummary.classList.add('hidden')}
+function update(dt){
+ gameClock+=dt;
+ updateMusic();
+ if(state==='playing'){
+  let dir=(keys.right?1:0)-(keys.left?1:0);if(!dir)dir=.45; // gentle auto-run
+  if(player.stun>0){player.stun-=dt;dir=0}
+  player.vx+=(dir*380-player.vx)*Math.min(1,dt*7);
+  if(keys.boost&&player.boost<=0){player.vx+=190;player.boost=.5}player.boost-=dt;
+  player.vy+=1100*dt;player.x+=player.vx*dt;player.y+=player.vy*dt;
+  if(player.y+player.h>=ground){player.y=ground-player.h;player.vy=0;player.onGround=true}else player.onGround=false;
+  // collision: forgiving trampoline response
+  for(const o of obstacles){const oy=ground-o.h;if(player.x+player.w>o.x&&player.x<o.x+o.w&&player.y+player.h>oy+5){
+    if(player.vy>=0&&player.y+player.h<oy+28){player.y=oy-player.h;player.vy=-390;player.onGround=false}else if(player.stun<=0){player.x=o.x-player.w-2;player.vx=-80;player.vy=-250;player.stun=.22}
+  }}
+  coins.forEach(c=>{if(!c.got&&player.x+player.w>c.x&&player.x<c.x+24&&player.y+player.h>c.y&&player.y<c.y+24){c.got=true;coinCount++;score+=25;sfxCoin()}});
+  score=Math.max(score,Math.floor(player.x/4));
+  if(player.x>=finale.ladderStartX){
+    state='climb';finaleT=0;player.vx=0;player.vy=0;sfxClimb();
+    player.x=finale.ladderStartX;player.y=finale.ladderStartY;
+  }
+  camera=Math.max(0,Math.min(slide.x+260-W+120,player.x-180));
+ } else if(state==='climb'){
+   finaleT=Math.min(1,finaleT+dt/2.05);
+   const eased=finaleT<.5?2*finaleT*finaleT:1-Math.pow(-2*finaleT+2,2)/2;
+   player.x=finale.ladderStartX+(finale.ladderEndX-finale.ladderStartX)*eased;
+   player.y=finale.ladderStartY+(finale.ladderEndY-finale.ladderStartY)*eased;
+   camera=Math.max(0,Math.min(slide.x+260-W+120,player.x-180));
+   if(finaleT>=1){
+     state='slide';finaleT=0;
+     player.x=finale.slideTopX;player.y=finale.slideTopY;sfxSlide();
+   }
+ } else if(state==='slide'){
+   finaleT=Math.min(1,finaleT+dt/1.35);
+   const eased=finaleT*finaleT*(3-2*finaleT);
+   player.x=finale.slideTopX+(finale.slideBottomX-finale.slideTopX)*eased;
+   player.y=finale.slideTopY+(finale.slideBottomY-finale.slideTopY)*eased;
+   camera=Math.max(0,Math.min(slide.x+260-W+120,player.x-180));
+   if(finaleT>=1){
+    score+=200;sfxSplash();
+    for(let i=0;i<110;i++)confetti.push({x:player.x+(Math.random()-.5)*120,y:ground-8,vx:(Math.random()-.5)*340,vy:-Math.random()*450-110,s:4+Math.random()*7,c:['#ffd42f','#f34f8f','#40d274','#ffffff','#20b7ef','#f45145'][i%6]});
+    player.y=ground+80;state='celebrate';splashTimer=0;
+   }
+ } else if(state==='celebrate'){
+   splashTimer+=dt;for(const c of confetti){c.x+=c.vx*dt;c.y+=c.vy*dt;c.vy+=700*dt}if(splashTimer>1.05)showInfo();
+ }
+}
+function loop(t){
+ let dt=Math.min(.033,(t-last)/1000||0);last=t;
+ update(dt);
+ ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,buf.width,buf.height);
+ ctx.scale(1/PIXEL_SCALE,1/PIXEL_SCALE);
+ drawWorld();
+ ctx.restore();
+ screenCtx.clearRect(0,0,W,H);
+ screenCtx.drawImage(buf,0,0,buf.width,buf.height,0,0,W,H);
+ requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+function jump(){if(state==='playing'&&(player.onGround||player.y>ground-90)){player.vy=-510;player.onGround=false;sfxJump()}}
+function isTypingTarget(e){const t=e.target;return t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)}
+window.addEventListener('keydown',e=>{if(isTypingTarget(e))return;if(['ArrowLeft','ArrowRight',' ','ArrowUp'].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true;if(e.key===' '||e.key==='ArrowUp')jump();if(e.key.toLowerCase()==='x')keys.boost=true});
+window.addEventListener('keyup',e=>{if(isTypingTarget(e))return;if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false;if(e.key.toLowerCase()==='x')keys.boost=false});
+document.querySelectorAll('.control').forEach(b=>{const k=b.dataset.key;const on=e=>{e.preventDefault();if(k==='jump')jump();else keys[k]=true};const off=e=>{e.preventDefault();if(k!=='jump')keys[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off)});
+canvas.addEventListener('pointerdown',e=>{ensureAudio();if(state==='playing')jump()});
+// Character cards
+const buntingPalette=['#ffd42f','#f34f8f','#20b7ef','#40d274','#ef4f89'];
+const buntingColors=Array.from({length:34},(_,i)=>buntingPalette[i%buntingPalette.length]);
+const buntingEl=document.querySelector('.bunting');
+buntingColors.forEach(c=>{const f=document.createElement('span');f.className='flag';f.style.borderTopColor=c;buntingEl.appendChild(f)});
+const wrap=document.getElementById('characters');palette.forEach((p,i)=>{const b=document.createElement('button');b.className='char'+(i===0?' selected':'');b.innerHTML=`<canvas class="charCanvas" width="64" height="74"></canvas><strong>${p.name}</strong>`;b.onclick=()=>{selected=i;[...wrap.children].forEach((n,j)=>n.classList.toggle('selected',j===i))};wrap.appendChild(b);const c=b.querySelector('canvas'),cc=c.getContext('2d');cc.imageSmoothingEnabled=false;
+ cc.fillStyle='#bfefff';cc.fillRect(0,0,64,74);
+ function r(x,y,w,h,col){cc.fillStyle=col;cc.fillRect(x,y,w,h)}
+ r(14,57,38,6,'#157fda');r(19,12,24,24,p.skin);r(17,10,28,9,p.hair);r(17,18,6,17,p.hair);r(41,17,5,18,p.hair);
+ r(24,22,3,3,'#10213d');r(35,22,3,3,'#10213d');r(28,30,8,2,'#8f4d55');
+ r(19,7,25,5,p.cap);r(17,35,30,23,p.suit);r(22,39,20,4,'rgba(255,255,255,.7)');
+ r(12,39,7,18,p.skin);r(46,39,7,18,p.skin);
+});
+// ---- RSVP form ----
+const childRowsEl=document.getElementById('childRows');
+let childRowSeq=0;
+function makeChildRow(){
+  childRowSeq++;
+  const row=document.createElement('div');row.className='childRow';row.dataset.rowId=childRowSeq;
+  row.innerHTML=`<input type="text" class="childName" placeholder="Child's name">
+    <label><input type="checkbox" class="childUnder8"> Under 8</label>
+    <button type="button" class="removeChild" aria-label="Remove child">✕</button>`;
+  row.querySelector('.childUnder8').addEventListener('change',updateUnder8Notice);
+  row.querySelector('.removeChild').addEventListener('click',()=>{
+    if(childRowsEl.children.length>1){row.remove()}
+    else{row.querySelector('.childName').value='';row.querySelector('.childUnder8').checked=false}
+    updateUnder8Notice();
+  });
+  return row;
+}
+function addChildRow(){childRowsEl.appendChild(makeChildRow())}
+function updateUnder8Notice(){
+  const anyUnder8=[...childRowsEl.querySelectorAll('.childUnder8')].some(cb=>cb.checked);
+  document.getElementById('under8Notice').classList.toggle('hidden',!anyUnder8);
+}
+addChildRow();
+document.getElementById('addChildBtn').onclick=addChildRow;
+
+function collectRsvp(){
+  const parentName=document.getElementById('rsvpParentName').value.trim();
+  const rows=[...childRowsEl.querySelectorAll('.childRow')];
+  const children=rows.map(r=>({name:r.querySelector('.childName').value.trim(),under8:r.querySelector('.childUnder8').checked})).filter(c=>c.name);
+  const anyUnder8=children.some(c=>c.under8);
+  const accompany=document.getElementById('accompanyAnswer').value;
+  return {parentName,children,anyUnder8,accompany};
+}
+function showRsvpError(msg){const e=document.getElementById('rsvpError');e.textContent=msg;e.classList.remove('hidden')}
+function clearRsvpError(){document.getElementById('rsvpError').classList.add('hidden')}
+
+document.getElementById('rsvpReviewBtn').onclick=()=>{
+  clearRsvpError();
+  const data=collectRsvp();
+  if(!data.parentName){showRsvpError('Please add the parent/guardian name.');return}
+  if(data.children.length===0){showRsvpError('Please add at least one child.');return}
+  if(data.anyUnder8&&!data.accompany){showRsvpError('Please answer the under 8s water accompaniment question.');return}
+  const lines=[
+    "Bo's 6 Aquasplash RSVP",
+    `Parent/guardian: ${data.parentName}`,
+    'Children attending:',
+    ...data.children.map(c=>` - ${c.name} (${c.under8?'Under 8':'8 or over'})`)
+  ];
+  if(data.anyUnder8)lines.push(`Accompanying adult in the water for under 8s: ${data.accompany}`);
+  const summary=lines.join('\n');
+  document.getElementById('rsvpSummaryText').textContent=summary;
+  const msg=encodeURIComponent(summary);
+  document.getElementById('rsvpWhatsappPansy').href=`https://wa.me/447880627734?text=${msg}`;
+  document.getElementById('rsvpWhatsappJakub').href=`https://wa.me/447928941905?text=${msg}`;
+  rsvpForm.classList.add('hidden');rsvpSummary.classList.remove('hidden');
+};
+document.getElementById('rsvpEditBtn').onclick=()=>{rsvpSummary.classList.add('hidden');rsvpForm.classList.remove('hidden')};
+document.getElementById('rsvpCopyBtn').onclick=async()=>{
+  const text=document.getElementById('rsvpSummaryText').textContent;
+  const btn=document.getElementById('rsvpCopyBtn');
+  try{await navigator.clipboard.writeText(text);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy RSVP text',1500)}
+  catch(e){btn.textContent='Copy failed — select text manually';setTimeout(()=>btn.textContent='Copy RSVP text',2000)}
+};
+document.getElementById('rsvpBtn').onclick=showRsvp;
+document.getElementById('rsvpBackBtn').onclick=showInfo;
+
+function downloadICS(){const text=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Bo Aquasplash//Invite//EN\r\nBEGIN:VEVENT\r\nUID:bo-aquasplash-20260912@example\r\nDTSTAMP:20260710T120000Z\r\nDTSTART:20260912T140000Z\r\nDTEND:20260912T160000Z\r\nSUMMARY:Bo's 6 Aquasplash Inflatable Party!\r\nLOCATION:London Aquatics Centre, Stratford E20 2ZQ\r\nDESCRIPTION:Contact Pansy 07880 627734 or Jakub 07928 941905.\r\nEND:VEVENT\r\nEND:VCALENDAR`;const blob=new Blob([text],{type:'text/calendar'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='bos-aquasplash-party.ics';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+document.getElementById('playBtn').onclick=start;document.getElementById('skipBtn').onclick=showInfo;document.getElementById('infoBtn').onclick=showInfo;
+const dismissRotateAndShowInfo=e=>{if(e)e.preventDefault();document.getElementById('rotate').classList.add('dismissed');showInfo()};
+const portraitInfoBtn=document.getElementById('portraitInfo');
+portraitInfoBtn.addEventListener('click',dismissRotateAndShowInfo);
+portraitInfoBtn.addEventListener('touchend',dismissRotateAndShowInfo,{passive:false});
+document.getElementById('closeInfo').onclick=()=>{infoScreen.classList.add('hidden');if(state==='info'){state='menu';startScreen.classList.remove('hidden')}};document.getElementById('replayBtn').onclick=start;document.getElementById('calendarBtn').onclick=downloadICS;
+const muteBtn=document.getElementById('muteBtn');
+muteBtn.onclick=()=>{ensureAudio();muted=!muted;muteBtn.textContent=muted?'🔇':'🔊'};
+})();
+</script>
+</body></html>
